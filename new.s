@@ -1,5 +1,5 @@
 .data
-var1: .word 3
+var1: .word 3 /* here, I'm storing a value of 3 into a variable var1. */
 
 	.global _start
 
