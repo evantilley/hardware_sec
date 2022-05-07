@@ -14,10 +14,7 @@ int oneValue = 1;
 char* word = "asdf";
 
 void criticalSection();
-
 void unlock();
-
-
 
 void *lock(){
     long threadID = (long) pthread_self();
@@ -29,23 +26,25 @@ void *lock(){
     asm volatile ("LDR R7, =lockVar\n\t"
                "LDREX R1, [R7]\n\t"
                "CMP R1, #0\n\t"
+               "BNE lock\n\t"
                "MOV R9, #1\n\t" // set R9 equal to 1
                "STREX R2, R9, [R7]\n\t" // attempt to update the shared loc$
                "CMP R2, #0\n\t" // the store was successful if R2 = 0
                "BNE lock\n\t" // if R2 != 0, then restart
+               "BL criticalSection"
         );
 
     // will not get here unless the thread gets the lock
-    criticalSection();
+    //criticalSection();
 }
 
 void criticalSection(){
-    locksObtained += 1;    
+    locksObtained += 1;
     long winningID = (long) pthread_self();
     // here is critical section
     // ok here try moving the variable from R5 into C variable and printing it
-    fprintf(stderr, "\nThread #%ld has won and is in the critical section.\n", $
-    fprintf(stderr, "\n%d different locks have been obtained so far.\n", locksO$
+    fprintf(stderr, "\nThread #%ld has won and is in the critical section.\n", winningID);
+    fprintf(stderr, "\n%d different locks have been obtained so far.\n", locksObtained);
     unlock();
 }
 
@@ -55,11 +54,10 @@ void unlock(){
     lockVar = 0;
 }
 
-
 int main(){
     int i;
     pthread_t tid;
-    for (i = 0; i < 100; i++){
+    for (i = 0; i < 10; i++){
          pthread_create(&tid, NULL, lock, NULL);
     }
 
